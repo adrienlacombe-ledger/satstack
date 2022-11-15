@@ -290,6 +290,8 @@ func loadOrCreateWallet(client *rpcclient.Client) (bool, error) {
 		return false, nil
 	}
 
+	
+
 	// Convert native error to btcjson.RPCError
 	rpcErr := err.(*btcjson.RPCError)
 
