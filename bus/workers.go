@@ -1,6 +1,8 @@
 package bus
 
 import (
+	"context"
+	"encoding/json"
 	"fmt"
 	"os"
 	"strings"
@@ -166,6 +168,63 @@ func descriptors(client *rpcclient.Client, account config.Account) ([]descriptor
 	return ret, nil
 }
 
+// ImportAccounts will import the descriptors corresponding to the accounts
+// into the Bitcoin Core wallet. This is a blocking operation.
+func (b *Bus) AbortRescan(ctx context.Context) (err error) {
+
+	walletInfo, err := b.secondaryClient.GetWalletInfo()
+	if err != nil {
+		return err
+	}
+
+	switch v := walletInfo.Scanning.Value.(type) {
+	case btcjson.ScanProgress:
+		log.WithFields(log.Fields{
+			"prefix":   "AbortRescan",
+			"progress": fmt.Sprintf("%.2f%%", v.Progress*100),
+			"duration": utils.HumanizeDuration(
+				time.Duration(v.Duration) * time.Second),
+		}).Info("Aborting Rescan")
+
+	default:
+		// Not scanning currently, or scan is complete.
+		log.WithFields(log.Fields{
+			"prefix": "AbortRescan",
+		}).Info("wallet is not scanning")
+		return nil
+	}
+	var params []json.RawMessage
+	var abortRescan bool
+	result, err := b.secondaryClient.RawRequest("abortrescan", params)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"prefix": "AbortRescan",
+			"error":  err,
+		}).Error("Failed to abort wallet rescan")
+
+		return err
+	}
+
+	err = json.Unmarshal(result, &abortRescan)
+
+	if err != nil {
+		log.WithFields(log.Fields{
+			"prefix": "AbortRescan",
+			"error":  err,
+		}).Error("Unmarshal abortRescan result")
+
+		return err
+	}
+
+	log.WithFields(log.Fields{
+		"prefix": "AbortRescan",
+	}).Infof("Abort Rescan successful: %t", abortRescan)
+
+	return nil
+
+}
+
 // runTheNumbers performs inflation checks against the connected full node.
 //
 // It does NOT perform any equality comparison between expected and actual
@@ -208,7 +267,7 @@ func runTheNumbers(b *Bus) error {
 	return nil
 }
 
-func (b *Bus) Worker(config *config.Configuration) {
+func (b *Bus) Worker(config *config.Configuration, skipCirculationCheck bool) {
 	importDone := make(chan bool)
 
 	sendInterruptSignal := func() {
@@ -243,17 +302,51 @@ func (b *Bus) Worker(config *config.Configuration) {
 			return
 		}
 
+<<<<<<< HEAD
 		// b.IsPendingScan = true
+||||||| 283eda1
+		b.IsPendingScan = true
+=======
+		if !skipCirculationCheck {
+>>>>>>> origin/master
 
+<<<<<<< HEAD
 		// if err := runTheNumbers(b); err != nil {
 		// 	log.WithFields(log.Fields{
 		// 		"prefix": "worker-runthenumbers",
 		// 		"error":  err,
 		// 	}).Error("Failed while running the numbers")
+||||||| 283eda1
+		if err := runTheNumbers(b); err != nil {
+			log.WithFields(log.Fields{
+				"prefix": "worker",
+				"error":  err,
+			}).Error("Failed while running the numbers")
+=======
+			b.IsPendingScan = true
 
+			if err := runTheNumbers(b); err != nil {
+				log.WithFields(log.Fields{
+					"prefix": "worker",
+					"error":  err,
+				}).Error("Failed while running the numbers")
+
+				sendInterruptSignal()
+				return
+			}
+>>>>>>> origin/master
+
+<<<<<<< HEAD
 		// 	sendInterruptSignal()
 		// 	return
 		// }
+||||||| 283eda1
+			sendInterruptSignal()
+			return
+		}
+=======
+		}
+>>>>>>> origin/master
 
 		b.IsPendingScan = false
 

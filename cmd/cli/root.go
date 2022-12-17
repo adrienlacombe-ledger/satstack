@@ -22,6 +22,7 @@ import (
 func init() {
 	rootCmd.PersistentFlags().String("port", "20000", "Port")
 	rootCmd.PersistentFlags().Bool("unload-wallet", false, "whether SatStack should unload wallet")
+	rootCmd.PersistentFlags().Bool("skip-circulation-check", false, "Skips a builtin check which compares the circulation of bitcoin in the utxo-set of your node with the one related to the blockheight(increases startup speed)")
 }
 
 var rootCmd = &cobra.Command{
@@ -31,8 +32,9 @@ var rootCmd = &cobra.Command{
 	Run: func(cmd *cobra.Command, args []string) {
 		port, _ := cmd.Flags().GetString("port")
 		unloadWallet, _ := cmd.Flags().GetBool("unload-wallet")
+		skipCirculationCheck, _ := cmd.Flags().GetBool("skip-circulation-check")
 
-		s := startup(unloadWallet)
+		s := startup(unloadWallet, skipCirculationCheck)
 		if s == nil {
 			return
 		}
@@ -55,7 +57,7 @@ var rootCmd = &cobra.Command{
 
 		// Wait for interrupt signal to gracefully shutdown the server with
 		// a timeout of 5 seconds.
-		quit := make(chan os.Signal)
+		quit := make(chan os.Signal, 1)
 		signal.Notify(quit, os.Interrupt)
 
 		<-quit
@@ -63,10 +65,12 @@ var rootCmd = &cobra.Command{
 		log.Info("Shutdown server: in progress")
 
 		{
+
 			// Scoped block to disconnect all connections, and stop all goroutines.
 			// If not successful within 5s, drop a nuclear bomb and fail with a
 			// FATAL error.
 
+<<<<<<< HEAD
 			success, err := s.Bus.AbortRescan()
 
 			if err != nil {
@@ -79,9 +83,20 @@ var rootCmd = &cobra.Command{
 			log.WithFields(log.Fields{}).Info("Result of AbortScan: ", success)
 
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+||||||| 283eda1
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+=======
+			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+>>>>>>> origin/master
 			defer cancel()
 
+			// First Check Wallet is syncing, if yes we need to abort the scan otherwise
+			// the database will be locked next time
+
+			s.Bus.AbortRescan(ctx)
+
 			s.Bus.Close(ctx)
+
 		}
 
 		{
@@ -105,7 +120,7 @@ func Execute() {
 	}
 }
 
-func startup(unloadWallet bool) *svc.Service {
+func startup(unloadWallet, skipCirculationCheck bool) *svc.Service {
 
 	log.SetLevel(logrus.DebugLevel)
 
@@ -159,7 +174,7 @@ func startup(unloadWallet bool) *svc.Service {
 
 	fortunes.Fortune()
 
-	s.Bus.Worker(configuration)
+	s.Bus.Worker(configuration, skipCirculationCheck)
 
 	return s
 }
