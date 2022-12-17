@@ -111,6 +111,10 @@ func (b *Bus) ImportAccounts(accounts []config.Account) error {
 		}
 	}
 
+	for _, desc := range descriptorsToImport {
+		fmt.Println(desc)
+	}
+
 	if len(descriptorsToImport) == 0 {
 		log.WithField(
 			"prefix", "worker",
@@ -239,28 +243,32 @@ func (b *Bus) Worker(config *config.Configuration) {
 			return
 		}
 
-		b.IsPendingScan = true
+		// b.IsPendingScan = true
 
-		if err := runTheNumbers(b); err != nil {
-			log.WithFields(log.Fields{
-				"prefix": "worker",
-				"error":  err,
-			}).Error("Failed while running the numbers")
+		// if err := runTheNumbers(b); err != nil {
+		// 	log.WithFields(log.Fields{
+		// 		"prefix": "worker-runthenumbers",
+		// 		"error":  err,
+		// 	}).Error("Failed while running the numbers")
 
-			sendInterruptSignal()
-			return
-		}
+		// 	sendInterruptSignal()
+		// 	return
+		// }
 
 		b.IsPendingScan = false
 
 		if err := b.ImportAccounts(config.Accounts); err != nil {
 			log.WithFields(log.Fields{
-				"prefix": "worker",
+				"prefix": "worker-importacounts",
 				"error":  err,
 			}).Error("Failed while importing descriptors")
 
 			sendInterruptSignal()
 			return
+		} else {
+			log.WithFields(log.Fields{
+				"prefix": "worker-importacounts",
+			}).Info("Successfully imported descriptors")
 		}
 
 		importDone <- true

@@ -47,13 +47,13 @@ func (b *Bus) GetTransactionHex(hash *chainhash.Hash) (string, error) {
 	return tx.Hex, nil
 }
 
-//see https://developer.bitcoin.org/reference/rpc/importdescriptors.html for specs
+// see https://developer.bitcoin.org/reference/rpc/importdescriptors.html for specs
 type ImportDesciptorRequest struct {
 	Descriptor string `json:"desc"`                 //(string, required) Descriptor to import.
 	Active     bool   `json:"active,omitempty"`     //(boolean, optional, default=false) Set this descriptor to be the active descriptor for the corresponding output type/externality
 	Range      []int  `json:"range,omitempty"`      //(numeric or array) If a ranged descriptor is used, this specifies the end or the range (in the form [begin,end]) to import
 	NextIndex  int    `json:"next_index,omitempty"` //(numeric) If a ranged descriptor is set to active, this specifies the next index to generate addresses from
-	Timestamp  uint32 `json:"timestamp"`            /*(integer / string, required) Time from which to start rescanning the blockchain for this descriptor, in UNIX epoch time
+	Timestamp  int32  `json:"timestamp"`            /*(integer / string, required) Time from which to start rescanning the blockchain for this descriptor, in UNIX epoch time
 	Use the string "now" to substitute the current synced blockchain time.
 	"now" can be specified to bypass scanning, for outputs which are known to never have been used, and
 	0 can be specified to scan the entire blockchain. Blocks up to 2 hours before the earliest timestamp
@@ -78,8 +78,9 @@ func ImportDescriptors(client *rpcclient.Client, descriptors []descriptor) error
 
 		requests[0] = ImportDesciptorRequest{
 			Descriptor: descriptor.Value,
+			Active:     true,
 			Range:      []int{0, descriptor.Depth},
-			Timestamp:  descriptor.Age,
+			Timestamp:  int32(descriptor.Age),
 		}
 
 		myIn, mErr := json.Marshal(requests)
@@ -115,7 +116,8 @@ func ImportDescriptors(client *rpcclient.Client, descriptors []descriptor) error
 			"descriptor": descriptor.Value,
 		})
 
-		if importDescriptorResult[0].Success == false {
+		if !importDescriptorResult[0].Success {
+
 			fields.Error("ImportDescriptors - Failed to import descriptor" + " || " + importDescriptorResult[0].Error.Message + importDescriptorResult[0].Error.Error())
 			hasError = true
 		} else {
@@ -171,4 +173,33 @@ func (b *Bus) GetTransaction(hash string) (*types.Transaction, error) {
 	}
 
 	return tx, nil
+}
+
+func (b *Bus) AbortRescan() (bool, error) {
+
+	log.Info("Calling AbortRescan")
+
+	var abortRescan bool
+	var params []json.RawMessage
+
+	client, err := b.ClientFactory()
+	if err != nil {
+		log.Error("Initializing Client")
+
+		return false, err
+	}
+
+	result, err := client.RawRequest("abortrescan", params)
+
+	if err != nil {
+		log.Error("error when calling abortrescan", err)
+		return false, err
+	}
+
+	err = json.Unmarshal(result, &abortRescan)
+
+	if err != nil {
+		log.Error("Unmarshal variable", err)
+	}
+	return abortRescan, nil
 }

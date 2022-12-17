@@ -287,8 +287,11 @@ func loadOrCreateWallet(client *rpcclient.Client) (bool, error) {
 	// Try to load wallet first.
 	_, err := client.LoadWallet(walletName)
 	if err == nil {
+		fmt.Println("Wallet was successfully loaded")
 		return false, nil
 	}
+
+	fmt.Println("Wallet was  not successfully loaded", err)
 
 	// Convert native error to btcjson.RPCError
 	rpcErr := err.(*btcjson.RPCError)

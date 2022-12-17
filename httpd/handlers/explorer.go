@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
@@ -14,6 +15,7 @@ func GetFees(s svc.ExplorerService) gin.HandlerFunc {
 	return func(ctx *gin.Context) {
 		blockCounts := ctx.QueryArray("block_count")
 		mode := strings.ToUpper(ctx.Param("mode"))
+		fmt.Println(mode)
 		if mode == "" || (mode != "UNSET" && mode != "ECONOMICAL" && mode != "CONSERVATIVE") {
 			mode = "CONSERVATIVE"
 		}

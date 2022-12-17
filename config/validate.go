@@ -28,9 +28,9 @@ func (c Configuration) validate() error {
 		if err := validateStringField("external", account.External); err != nil {
 			return err
 		}
-		if err := validateStringField("internal", account.Internal); err != nil {
-			return err
-		}
+		// if err := validateStringField("internal", account.Internal); err != nil {
+		// 	return err
+		// }
 
 		if account.Birthday != nil && account.Birthday.Before(BIP0039Genesis) {
 			log.WithFields(log.Fields{

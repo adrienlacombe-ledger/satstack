@@ -13,6 +13,7 @@ import (
 	"github.com/ledgerhq/satstack/httpd"
 	"github.com/ledgerhq/satstack/httpd/svc"
 	"github.com/ledgerhq/satstack/version"
+	"github.com/sirupsen/logrus"
 	log "github.com/sirupsen/logrus"
 	"github.com/spf13/cobra"
 	prefixed "github.com/x-cray/logrus-prefixed-formatter"
@@ -66,6 +67,17 @@ var rootCmd = &cobra.Command{
 			// If not successful within 5s, drop a nuclear bomb and fail with a
 			// FATAL error.
 
+			success, err := s.Bus.AbortRescan()
+
+			if err != nil {
+				log.WithFields(log.Fields{
+					"error": err,
+				}).Info("Failed to abortscan")
+
+			}
+
+			log.WithFields(log.Fields{}).Info("Result of AbortScan: ", success)
+
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
@@ -75,7 +87,7 @@ var rootCmd = &cobra.Command{
 		{
 			// Scoped block to gracefully shutdown Gin-Gonic server within 10s.
 
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 			defer cancel()
 
 			if err := srv.Shutdown(ctx); err != nil {
@@ -95,7 +107,7 @@ func Execute() {
 
 func startup(unloadWallet bool) *svc.Service {
 
-	// log.SetLevel(logrus.DebugLevel)
+	log.SetLevel(logrus.DebugLevel)
 
 	log.SetFormatter(&prefixed.TextFormatter{
 		TimestampFormat:  "2006/01/02 - 15:04:05",
