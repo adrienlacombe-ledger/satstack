@@ -116,14 +116,8 @@ func ImportDescriptors(client *rpcclient.Client, descriptors []descriptor) error
 			"descriptor": descriptor.Value,
 		})
 
-<<<<<<< HEAD
 		if !importDescriptorResult[0].Success {
 
-||||||| 283eda1
-		if importDescriptorResult[0].Success == false {
-=======
-		if !importDescriptorResult[0].Success {
->>>>>>> origin/master
 			fields.Error("ImportDescriptors - Failed to import descriptor" + " || " + importDescriptorResult[0].Error.Message + importDescriptorResult[0].Error.Error())
 			hasError = true
 		} else {
@@ -180,7 +174,6 @@ func (b *Bus) GetTransaction(hash string) (*types.Transaction, error) {
 
 	return tx, nil
 }
-<<<<<<< HEAD
 
 func (b *Bus) AbortRescan() (bool, error) {
 
@@ -210,15 +203,3 @@ func (b *Bus) AbortRescan() (bool, error) {
 	}
 	return abortRescan, nil
 }
-||||||| 283eda1
-=======
-
-type Descritpor struct {
-	desc      string
-	timestamp uint32
-}
-type ListDescriptorResult struct {
-	WalletName  bool         `json:"wallet_name"`
-	Descriptors []Descritpor `json:"descriptors"`
-}
->>>>>>> origin/master

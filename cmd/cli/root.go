@@ -70,30 +70,18 @@ var rootCmd = &cobra.Command{
 			// If not successful within 5s, drop a nuclear bomb and fail with a
 			// FATAL error.
 
-<<<<<<< HEAD
 			success, err := s.Bus.AbortRescan()
 
 			if err != nil {
 				log.WithFields(log.Fields{
 					"error": err,
 				}).Info("Failed to abortscan")
-
 			}
 
 			log.WithFields(log.Fields{}).Info("Result of AbortScan: ", success)
 
 			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-||||||| 283eda1
-			ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-=======
-			ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
->>>>>>> origin/master
 			defer cancel()
-
-			// First Check Wallet is syncing, if yes we need to abort the scan otherwise
-			// the database will be locked next time
-
-			s.Bus.AbortRescan(ctx)
 
 			s.Bus.Close(ctx)
 
