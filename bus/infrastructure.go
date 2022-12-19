@@ -37,8 +37,10 @@ const (
 	// bitcoind's wallet.
 	walletName = "satstack"
 
-	errDuplicateWalletLoadMsg = "Duplicate -wallet filename specified."
-	errWalletAlreadyLoadedMsg = "Wallet file verification failed. Refusing to load database. Data file"
+	errDuplicateWalletLoadMsg  = "Duplicate -wallet filename specified."
+	errWalletAlreadyLoadedMsg1 = "Wallet file verification failed. Refusing to load database. Data file"
+	// Cores Responds changes so adding the new one but keeping the old for backwards compatibility
+	errWalletAlreadyLoadedMsg2 = "Wallet file verification failed. SQLiteDatabase: Unable to obtain an exclusive lock on the database"
 )
 
 // Bus represents a transport allowing access to Bitcoin RPC methods.
@@ -166,9 +168,24 @@ func New(host string, user string, pass string, proxy string, noTLS bool, unload
 			"wallet": walletName,
 		}).Info("Created new wallet")
 	} else {
-		log.WithFields(log.Fields{
-			"wallet": walletName,
-		}).Info("Loaded existing wallet")
+		// log.WithFields(log.Fields{
+		// 	"wallet": walletName,
+		// }).Info("Loaded existing wallet")
+
+		// walletInfo, err := mainClient.GetWalletInfo()
+		// if err != nil {
+		// 	return nil, err
+		// }
+
+		// switch v := walletInfo.Scanning.Value.(type) {
+		// case btcjson.ScanProgress:
+		// 	// Wallet is in the process of syncing, so we are
+		// 	// going
+
+		// default:
+		// 	// Not scanning currently, or scan is complete.
+		// }
+
 	}
 
 	params, err := ChainParams(info.Chain)
@@ -306,7 +323,12 @@ func loadOrCreateWallet(client *rpcclient.Client) (bool, error) {
 		return false, nil
 	}
 
-	if rpcErr.Code == btcjson.ErrRPCWallet && strings.Contains(rpcErr.Message, errWalletAlreadyLoadedMsg) {
+	if rpcErr.Code == btcjson.ErrRPCWallet && strings.Contains(rpcErr.Message, errWalletAlreadyLoadedMsg1) {
+		// wallet already loaded. Ignore the error and return.
+		return false, nil
+	}
+
+	if rpcErr.Code == btcjson.ErrRPCWallet && strings.Contains(rpcErr.Message, errWalletAlreadyLoadedMsg2) {
 		// wallet already loaded. Ignore the error and return.
 		return false, nil
 	}

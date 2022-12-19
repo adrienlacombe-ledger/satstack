@@ -45,10 +45,10 @@ func waitForIBD(b *Bus) error {
 	return nil
 }
 
-func getImportProgress(b *Bus) error {
+func getImportProgress(b *Bus) (bool, error) {
 	walletInfo, err := b.secondaryClient.GetWalletInfo()
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	switch v := walletInfo.Scanning.Value.(type) {
@@ -59,12 +59,11 @@ func getImportProgress(b *Bus) error {
 			"duration": utils.HumanizeDuration(
 				time.Duration(v.Duration) * time.Second),
 		}).Info("Importing descriptors")
-	case bool:
 	default:
 		// Not scanning currently, or scan is complete.
 	}
 
-	return nil
+	return true, nil
 }
 
 // ImportAccounts will import the descriptors corresponding to the accounts
@@ -75,6 +74,8 @@ func (b *Bus) ImportAccounts(accounts []config.Account) error {
 	if accounts == nil {
 		return nil
 	}
+
+	// ToDo Include My Code here
 
 	client, err := b.ClientFactory()
 	if err != nil {
@@ -348,7 +349,7 @@ func (b *Bus) Worker(config *config.Configuration, skipCirculationCheck bool) {
 			default:
 				time.Sleep(7 * time.Second)
 
-				if err := getImportProgress(b); err != nil {
+				if _, err := getImportProgress(b); err != nil {
 					log.WithFields(log.Fields{
 						"prefix": "worker",
 						"error":  err,

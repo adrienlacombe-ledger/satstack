@@ -33,6 +33,7 @@ var rootCmd = &cobra.Command{
 		port, _ := cmd.Flags().GetString("port")
 		unloadWallet, _ := cmd.Flags().GetBool("unload-wallet")
 		skipCirculationCheck, _ := cmd.Flags().GetBool("skip-circulation-check")
+		// rescanExistingWallet, _ := cmd.Flags().GetBool("rescan-existing-wallet-from-birthday")
 
 		s := startup(unloadWallet, skipCirculationCheck)
 		if s == nil {

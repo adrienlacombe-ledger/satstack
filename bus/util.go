@@ -43,6 +43,8 @@ func DeriveAddress(client *rpcclient.Client, descriptor string, index int) (*str
 	addresses, err := client.DeriveAddresses(
 		descriptor,
 
+		// ToDo Wrong Comment
+
 		// Since we're interested in only the address at addressIndex,
 		// specifying the range as [begin, end] ensures that addresses
 		// between index 0 and end-1 are not derived uselessly.
