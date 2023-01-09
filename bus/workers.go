@@ -365,6 +365,7 @@ func (b *Bus) Worker(config *config.Configuration, skipCirculationCheck bool,
 				if err != nil {
 					// no rescanning necessary
 					log.Info("In case you run satstack for the first this error can be ignored: ", err)
+					importDone <- true
 					return
 				}
 
